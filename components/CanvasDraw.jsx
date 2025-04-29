@@ -88,7 +88,7 @@ const CanvasDraw = forwardRef(({ penSize = 2, onDrawChange }, ref) => {
       canvas.removeEventListener("touchend", stopDrawing);
       canvas.removeEventListener("touchcancel", stopDrawing);
     };
-  }, []);  // ← EMPTY dependencies. Only run once
+  }, []);
 
   // Update pen size separately
   useEffect(() => {
@@ -99,8 +99,21 @@ const CanvasDraw = forwardRef(({ penSize = 2, onDrawChange }, ref) => {
 
   useImperativeHandle(ref, () => ({
     getDataURL: () => {
-      return canvasRef.current.toDataURL("image/png");
+      const originalCanvas = canvasRef.current;
+
+      const downscaledCanvas = document.createElement("canvas");
+      downscaledCanvas.width = 64;
+      downscaledCanvas.height = 64;
+
+      const ctx = downscaledCanvas.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, 64, 64); // white background
+
+      ctx.drawImage(originalCanvas, 0, 0, 64, 64);
+
+      return downscaledCanvas.toDataURL("image/png");
     },
+
     clear: () => {
       const canvas = canvasRef.current;
       const ctx = ctxRef.current;
