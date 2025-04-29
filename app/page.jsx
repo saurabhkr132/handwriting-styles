@@ -11,6 +11,16 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import AuthForm from "@/components/AuthForm";
+import { HelpCircle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { FaRegHandPointRight } from "react-icons/fa";
+import { FaGithub } from "react-icons/fa";
+import { SiWikibooks } from "react-icons/si";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("train");
@@ -25,6 +35,7 @@ export default function Home() {
   const [isCanvasEmpty, setIsCanvasEmpty] = useState(true);
   const canvasRef = useRef(null);
   const router = useRouter();
+  const [showTrainHelp, setShowTrainHelp] = useState(false);
 
   const { user } = useAuth();
 
@@ -119,6 +130,7 @@ export default function Home() {
       setSaveStatus("success");
       setTimeout(() => setSaveStatus("idle"), 1000); // Revert after 2 seconds
       canvasRef.current.clear();
+      setIsCanvasEmpty(true);
     } catch (error) {
       console.error("Training error:", error);
       alert(`Error: ${error.message}`);
@@ -158,6 +170,72 @@ export default function Home() {
           >
             Train Model
           </Button>
+          <div className="flex justify-end px-4 pt-2">
+            <button
+              onClick={() => setShowTrainHelp(true)}
+              className="text-blue-500 hover:text-blue-700"
+            >
+              <HelpCircle className="w-6 h-6" />
+            </button>
+          </div>
+
+          <Dialog open={showTrainHelp} onOpenChange={setShowTrainHelp}>
+            <DialogContent>
+              <DialogHeader>
+                <div className="flex items-center gap-2">
+                  <SiWikibooks className="text-lg" />
+                  <DialogTitle>How to Contribute</DialogTitle>
+                </div>
+              </DialogHeader>
+              <ul className="pl-4 space-y-3 text-[15px] text-gray-800 leading-relaxed">
+                <li className="flex items-start gap-3 pl-1">
+                  <FaRegHandPointRight className="mt-1 text-gray-700 text-4xl" />
+                  <span>
+                    Enter a single character (a–z, A–Z, 0–9, or basic
+                    punctuation). For special characters, multiple-character
+                    labels are allowed.
+                  </span>
+                </li>
+
+                <li className="flex items-start gap-3 pl-1">
+                  <FaRegHandPointRight className="mt-1 text-gray-700 text-4xl" />
+                  <span>
+                    Draw the character in your natural handwriting using the
+                    canvas below, preferably using a stylus or a writing pad.
+                  </span>
+                </li>
+                <li className="flex items-start gap-3 pl-1">
+                  <FaRegHandPointRight className="mt-1 text-gray-700 text-2xl" />
+                  <span>
+                    Make sure the character fills most of the canvas—avoid
+                    writing full words or phrases.
+                  </span>
+                </li>
+                <li className="flex items-start gap-3 pl-1">
+                  <FaRegHandPointRight className="mt-1 text-gray-700 text-lg" />
+                  <span>
+                    Click "Save Drawing" to submit your handwriting sample.
+                  </span>
+                </li>
+                <li className="flex items-start gap-3 pl-1">
+                  <FaRegHandPointRight className="mt-1 text-gray-700 text-3xl" />
+                  <span>
+                    You can contribute multiple samples per character.{" "}
+                    <span className="text-gray-600 italic">
+                      (10–20 samples recommended for best results)
+                    </span>
+                  </span>
+                </li>
+                <li className="flex items-start gap-3 pl-1">
+                  <FaRegHandPointRight className="mt-1 text-gray-700 text-2xl" />
+                  <span>
+                    Keep your strokes consistent and clear to help improve model
+                    accuracy.
+                  </span>
+                </li>
+              </ul>
+            </DialogContent>
+          </Dialog>
         </div>
       )}
 
@@ -252,12 +330,21 @@ export default function Home() {
 
                   <Card className="p-4 space-y-4">
                     <div className="aspect-square w-full bg-white rounded border border-gray-200">
-                      <CanvasDraw ref={canvasRef} penSize={penSize} onDrawChange={(hasContent) => setIsCanvasEmpty(!hasContent)} />
+                      <CanvasDraw
+                        ref={canvasRef}
+                        penSize={penSize}
+                        onDrawChange={(hasContent) =>
+                          setIsCanvasEmpty(!hasContent)
+                        }
+                      />
                     </div>
 
                     <Button
                       variant="outline"
-                      onClick={() => canvasRef.current?.clear()}
+                      onClick={() => {
+                        canvasRef.current?.clear();
+                        setIsCanvasEmpty(true);
+                      }}
                       className="w-full text-gray-600"
                     >
                       Clear Canvas
@@ -294,6 +381,17 @@ export default function Home() {
           </div>
         </div>
       )}
+      <footer className="w-full py-4 flex justify-center items-center text-gray-600 text-sm border-t mt-10">
+        <a
+          href="https://github.com/saurabhkr132/handwriting-styles"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 hover:text-black transition"
+        >
+          <FaGithub className="w-5 h-5" />
+          View Repository
+        </a>
+      </footer>
     </div>
   );
 }
