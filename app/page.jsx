@@ -31,7 +31,7 @@ export default function Home() {
   const [character, setCharacter] = useState("");
   const [isTraining, setIsTraining] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle"); // 'idle' | 'success'
-  const [penSize, setPenSize] = useState(8);
+  const [penSize, setPenSize] = useState(20);
   const [isCanvasEmpty, setIsCanvasEmpty] = useState(true);
   const canvasRef = useRef(null);
   const router = useRouter();
@@ -319,8 +319,8 @@ export default function Home() {
                     </label>
                     <input
                       type="range"
-                      min="1"
-                      max="20"
+                      min="8"
+                      max="26"
                       value={penSize}
                       onChange={(e) => setPenSize(Number(e.target.value))}
                       className="flex-1"
