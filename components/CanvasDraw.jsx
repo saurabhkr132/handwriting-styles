@@ -1,30 +1,32 @@
 import { useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 
-const CanvasDraw = forwardRef(({ penSize = 2 }, ref) => {
+const CanvasDraw = forwardRef(({ penSize = 2, onDrawChange }, ref) => {
   const canvasRef = useRef(null);
   const isDrawing = useRef(false);
   const ctxRef = useRef(null);
+  const onDrawChangeRef = useRef(onDrawChange);
+
+  useEffect(() => {
+    onDrawChangeRef.current = onDrawChange;
+  }, [onDrawChange]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
 
-    // Fill white background once at start
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Initial style
     ctx.lineCap = "round";
     ctx.strokeStyle = "#000000";
-    ctx.lineWidth = penSize; // (initially)
-
+    ctx.lineWidth = penSize;
     ctxRef.current = ctx;
 
     const getEventPosition = (e) => {
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
-      
+
       if (e.touches && e.touches.length > 0) {
         return {
           x: (e.touches[0].clientX - rect.left) * scaleX,
@@ -52,6 +54,10 @@ const CanvasDraw = forwardRef(({ penSize = 2 }, ref) => {
       const { x, y } = getEventPosition(e);
       ctx.lineTo(x, y);
       ctx.stroke();
+
+      if (typeof onDrawChangeRef.current === "function") {
+        onDrawChangeRef.current(true);
+      }
     };
 
     const stopDrawing = (e) => {
@@ -61,7 +67,6 @@ const CanvasDraw = forwardRef(({ penSize = 2 }, ref) => {
       isDrawing.current = false;
     };
 
-    // Attach events
     canvas.addEventListener("mousedown", startDrawing);
     canvas.addEventListener("mousemove", draw);
     canvas.addEventListener("mouseup", stopDrawing);
@@ -83,9 +88,9 @@ const CanvasDraw = forwardRef(({ penSize = 2 }, ref) => {
       canvas.removeEventListener("touchend", stopDrawing);
       canvas.removeEventListener("touchcancel", stopDrawing);
     };
-  }, []);
+  }, []);  // ← EMPTY dependencies. Only run once
 
-  // Update pen size without resetting canvas
+  // Update pen size separately
   useEffect(() => {
     if (ctxRef.current) {
       ctxRef.current.lineWidth = penSize;
@@ -93,19 +98,30 @@ const CanvasDraw = forwardRef(({ penSize = 2 }, ref) => {
   }, [penSize]);
 
   useImperativeHandle(ref, () => ({
+    getDataURL: () => {
+      return canvasRef.current.toDataURL("image/png");
+    },
     clear: () => {
       const canvas = canvasRef.current;
       const ctx = ctxRef.current;
-      if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      if (typeof onDrawChangeRef.current === "function") {
+        onDrawChangeRef.current(false);
       }
     },
-    getDataURL: () => {
+    isBlank: () => {
       const canvas = canvasRef.current;
-      return canvas.toDataURL("image/png");
-    }
+      const blank = document.createElement("canvas");
+      blank.width = canvas.width;
+      blank.height = canvas.height;
+      const blankCtx = blank.getContext("2d");
+      blankCtx.fillStyle = "#ffffff";
+      blankCtx.fillRect(0, 0, blank.width, blank.height);
+
+      return canvas.toDataURL() === blank.toDataURL();
+    },
   }));
 
   return (

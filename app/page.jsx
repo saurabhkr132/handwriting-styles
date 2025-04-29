@@ -22,6 +22,7 @@ export default function Home() {
   const [isTraining, setIsTraining] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle"); // 'idle' | 'success'
   const [penSize, setPenSize] = useState(8);
+  const [isCanvasEmpty, setIsCanvasEmpty] = useState(true);
   const canvasRef = useRef(null);
   const router = useRouter();
 
@@ -251,7 +252,7 @@ export default function Home() {
 
                   <Card className="p-4 space-y-4">
                     <div className="aspect-square w-full bg-white rounded border border-gray-200">
-                      <CanvasDraw ref={canvasRef} penSize={penSize} />
+                      <CanvasDraw ref={canvasRef} penSize={penSize} onDrawChange={(hasContent) => setIsCanvasEmpty(!hasContent)} />
                     </div>
 
                     <Button
@@ -265,7 +266,7 @@ export default function Home() {
 
                   <Button
                     onClick={handleTrain}
-                    disabled={isTraining || !character}
+                    disabled={isTraining || !character || isCanvasEmpty}
                     variant="secondary"
                     className="w-full bg-blue-700 text-white"
                   >
