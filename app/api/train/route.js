@@ -19,27 +19,43 @@ async function authorizeGoogleDrive() {
 }
 
 async function findOrCreateFolder(drive, folderName, parentFolderId) {
-  const res = await drive.files.list({
-    q: `'${parentFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and name='${folderName}' and trashed=false`,
+  // First: Try to find folder with exact appProperty
+  let res = await drive.files.list({
+    q: `'${parentFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and appProperties has { key='exactName' and value='${folderName}' } and trashed=false`,
     fields: 'files(id, name)',
   });
 
   if (res.data.files.length > 0) {
     return res.data.files[0].id;
-  } else {
-    const folderMetadata = {
-      name: folderName,
-      mimeType: 'application/vnd.google-apps.folder',
-      parents: [parentFolderId],
-    };
-
-    const folder = await drive.files.create({
-      resource: folderMetadata,
-      fields: 'id',
-    });
-
-    return folder.data.id;
   }
+
+  // Second: Fallback to matching name (case-sensitive check manually)
+  res = await drive.files.list({
+    q: `'${parentFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+    fields: 'files(id, name)',
+  });
+
+  const exactMatch = res.data.files.find(file => file.name === folderName);
+  if (exactMatch) {
+    return exactMatch.id;
+  }
+
+  // Otherwise: create new folder with appProperties
+  const folderMetadata = {
+    name: folderName,
+    mimeType: 'application/vnd.google-apps.folder',
+    parents: [parentFolderId],
+    appProperties: {
+      exactName: folderName,
+    },
+  };
+
+  const folder = await drive.files.create({
+    resource: folderMetadata,
+    fields: 'id',
+  });
+
+  return folder.data.id;
 }
 
 async function uploadFileToDrive(drive, bufferData, fileName, folderId) {

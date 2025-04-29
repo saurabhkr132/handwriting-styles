@@ -158,9 +158,9 @@ export default function Home() {
         <div className="flex justify-center space-x-4 mb-8">
           <Button
             variant={activeTab === "generate" ? "default" : "outline"}
-            // onClick={() => setActiveTab("generate")}
-            onClick={() => alert("Model not yet trained!")}
-            className="cursor-not-allowed opacity-50"
+            onClick={() => setActiveTab("generate")}
+            // onClick={() => alert("Model not yet trained!")}
+            // className="cursor-not-allowed opacity-50"
           >
             Generate Handwriting
           </Button>
