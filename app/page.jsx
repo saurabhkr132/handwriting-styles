@@ -25,8 +25,11 @@ import { SiWikibooks } from "react-icons/si";
 export default function Home() {
   const [activeTab, setActiveTab] = useState("train");
   const [text, setText] = useState("");
+  const [trainText, setTrainText] = useState("");
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [inputText, setInputText] = useState("HANDWRITING");
+  const [imageDataList, setImageDataList] = useState([]);
 
   const [character, setCharacter] = useState("");
   const [isTraining, setIsTraining] = useState(false);
@@ -37,19 +40,9 @@ export default function Home() {
   const router = useRouter();
   const [showTrainHelp, setShowTrainHelp] = useState(false);
 
+  const [imgSrc, setImgSrc] = useState("");
+
   const { user } = useAuth();
-
-  // useEffect(() => {
-  //   const unsubscribe = onAuthStateChanged(auth, (user) => {
-  //     if (!user) {
-  //       router.push("/login");
-  //     } else {
-  //       setLoading(false);
-  //     }
-  //   });
-
-  //   return () => unsubscribe();
-  // }, [router]);
 
   const handleLogout = async () => {
     try {
@@ -65,26 +58,51 @@ export default function Home() {
   const handleCharacterChange = (e) => {
     const input = e.target.value;
     // if (input.length <= 1) {
-    setCharacter(input);
+    setTrainText(input);
     // }
   };
 
   const handleGenerate = async () => {
+    if (!inputText) return;
     setLoading(true);
+    setImageDataList([]);
+
+    const images = [];
+
     try {
-      // Mock implementation
-      const mockImages = Array(text.length).fill(
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
-      );
-      setImages(mockImages);
+      for (const char of inputText) {
+        if (char === " ") {
+          // Add a blank space
+          images.push(null);
+          continue;
+        }
+
+        const response = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ character: char }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.detail || `Failed to generate for '${char}'`);
+        }
+
+        const data = await response.json();
+        images.push(`data:image/png;base64,${data.image_base64}`);
+      }
+
+      setImageDataList(images);
     } catch (error) {
-      console.error("Generation error:", error);
+      alert("Error: " + error.message);
+      console.error("Error generating word:", error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleTrain = async () => {
-    if (!character) {
+    if (!trainText) {
       alert("Please enter a character first");
       return;
     }
@@ -114,7 +132,7 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          character,
+          trainText,
           image: imageData,
           username: user.username,
         }),
@@ -254,26 +272,43 @@ export default function Home() {
                 </div>
 
                 <div className="flex flex-col space-y-4">
-                  <Input
-                    placeholder="Enter text to generate..."
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                  />
-                  <Button
-                    onClick={handleGenerate}
-                    disabled={loading || !text}
-                    className="w-full"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      "Generate"
-                    )}
-                  </Button>
-                </div>
+      <Input
+        placeholder="Enter text to generate..."
+        value={inputText}
+        onChange={(e) => setInputText(e.target.value)}
+      />
+      <Button
+        onClick={handleGenerate}
+        disabled={loading || !inputText}
+        className="w-full"
+      >
+        {loading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Generating...
+          </>
+        ) : (
+          "Generate"
+        )}
+      </Button>
+
+      {imageDataList.length > 0 && (
+        <div className="flex space-x-1 mt-4 p-2">
+          {imageDataList.map((src, idx) =>
+            src ? (
+              <img
+                key={idx}
+                src={src}
+                alt={`char-${idx}`}
+                className="w-16 h-16 object-contain"
+              />
+            ) : (
+              <div key={idx} className="w-4" /> // small gap for space
+            )
+          )}
+        </div>
+      )}
+    </div>
 
                 {images.length > 0 && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -306,7 +341,7 @@ export default function Home() {
                   <div className="text-center">
                     <Input
                       placeholder="Enter character"
-                      value={character}
+                      value={trainText}
                       onChange={handleCharacterChange}
                       // maxLength={1}
                       className="text-center text-2xl font-mono h-12"
@@ -353,7 +388,7 @@ export default function Home() {
 
                   <Button
                     onClick={handleTrain}
-                    disabled={isTraining || !character || isCanvasEmpty}
+                    disabled={isTraining || !trainText || isCanvasEmpty}
                     variant="secondary"
                     className="w-full bg-blue-700 text-white"
                   >
@@ -369,10 +404,10 @@ export default function Home() {
                     )}
                   </Button>
 
-                  {character && (
+                  {trainText && (
                     <p className="text-center text-gray-500">
                       Drawing samples for:{" "}
-                      <span className="font-bold">{character}</span>
+                      <span className="font-bold">{trainText}</span>
                     </p>
                   )}
                 </div>

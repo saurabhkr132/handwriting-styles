@@ -89,9 +89,9 @@ async function uploadFileToDrive(drive, bufferData, fileName, folderId) {
 
 export async function POST(req) {
   try {
-    const { character, image, username } = await req.json();
+    const { trainText, image, username } = await req.json();
 
-    if (!character || !image || !username) {
+    if (!trainText || !image || !username) {
       return NextResponse.json({ error: 'Character, image or username missing' }, { status: 400 });
     }
 
@@ -102,7 +102,7 @@ export async function POST(req) {
 
     const userFolderId = await findOrCreateFolder(drive, username, userDatasetFolderId);
 
-    const characterFolderId = await findOrCreateFolder(drive, character, userFolderId);
+    const characterFolderId = await findOrCreateFolder(drive, trainText, userFolderId);
 
     const base64Data = image.replace(/^data:image\/png;base64,/, '');
     const bufferData = Buffer.from(base64Data, 'base64');
