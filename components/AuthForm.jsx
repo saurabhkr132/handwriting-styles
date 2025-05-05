@@ -20,9 +20,28 @@ export default function AuthForm() {
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
-    } catch (err) {
-      console.error(err);
-      alert(err.message);
+    } catch (err) {    
+      if (isRegistering) {
+        if (err.code === "auth/email-already-in-use") {
+          alert("This username is already taken. Please choose another.");
+        } else if (err.code === "auth/invalid-email") {
+          alert("Invalid username format.");
+        } else if (err.code === "auth/weak-password") {
+          alert("Password should be at least 6 characters.");
+        } else {
+          alert("Registration failed. " + err.message);
+        }
+      } else {
+        if (err.code === "auth/invalid-credential") {
+          alert("No account found with that username. Create an account first.");
+        } else if (err.code === "auth/wrong-password") {
+          alert("Incorrect password. Please try again.");
+        } else if (err.code === "auth/invalid-email") {
+          alert("Invalid username format.");
+        } else {
+          alert("Login failed. " + err.message);
+        }
+      }
     }
   };
 

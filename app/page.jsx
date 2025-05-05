@@ -23,10 +23,10 @@ import { FaGithub } from "react-icons/fa";
 import { SiWikibooks } from "react-icons/si";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState("train");
-  const [text, setText] = useState("");
+  const imageCache = useRef({}); // Ref to persists without triggering re-renders
+
+  const [activeTab, setActiveTab] = useState("generate");
   const [trainText, setTrainText] = useState("");
-  const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [inputText, setInputText] = useState("HANDWRITING");
   const [imageDataList, setImageDataList] = useState([]);
@@ -53,8 +53,6 @@ export default function Home() {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
-
   const handleCharacterChange = (e) => {
     const input = e.target.value;
     // if (input.length <= 1) {
@@ -72,8 +70,12 @@ export default function Home() {
     try {
       for (const char of inputText) {
         if (char === " ") {
-          // Add a blank space
           images.push(null);
+          continue;
+        }
+
+        if (imageCache.current[char]) {
+          images.push(imageCache.current[char]);
           continue;
         }
 
@@ -89,7 +91,9 @@ export default function Home() {
         }
 
         const data = await response.json();
-        images.push(`data:image/png;base64,${data.image_base64}`);
+        const base64Img = `data:image/png;base64,${data.image_base64}`;
+        imageCache.current[char] = base64Img; // Cache it
+        images.push(base64Img);
       }
 
       setImageDataList(images);
@@ -155,6 +159,44 @@ export default function Home() {
     } finally {
       setIsTraining(false);
     }
+  };
+
+  const downloadAllImages = () => {
+    if (imageDataList.length === 0) return;
+
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const imageWidth = 20; // Width of each image
+    const imageHeight = 20; // Height of each image
+
+    const rows = Math.ceil(imageDataList.length / 5); // Images per row
+    const cols = 20; // Number of images per row
+
+    // Set canvas width and height
+    canvas.width = cols * imageWidth;
+    canvas.height = rows * imageHeight;
+
+    // Draw each image onto the canvas
+    imageDataList.forEach((imgData, index) => {
+      const img = new Image();
+      img.src = imgData;
+
+      img.onload = () => {
+        const x = (index % cols) * imageWidth;
+        const y = Math.floor(index / cols) * imageHeight;
+        ctx.drawImage(img, x, y, imageWidth, imageHeight);
+
+        // If all images are drawn, trigger the download
+        if (index === imageDataList.length - 1) {
+          const dataUrl = canvas.toDataURL("image/png");
+          const link = document.createElement("a");
+          link.href = dataUrl;
+          link.download = "generated_styles.png"; // Name of the file to download
+          link.click();
+        }
+      };
+    });
   };
 
   return (
@@ -271,58 +313,70 @@ export default function Home() {
                   </p>
                 </div>
 
-                <div className="flex flex-col space-y-4">
-      <Input
-        placeholder="Enter text to generate..."
-        value={inputText}
-        onChange={(e) => setInputText(e.target.value)}
-      />
-      <Button
-        onClick={handleGenerate}
-        disabled={loading || !inputText}
-        className="w-full"
-      >
-        {loading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Generating...
-          </>
-        ) : (
-          "Generate"
-        )}
-      </Button>
-
-      {imageDataList.length > 0 && (
-        <div className="flex space-x-1 mt-4 p-2">
-          {imageDataList.map((src, idx) =>
-            src ? (
-              <img
-                key={idx}
-                src={src}
-                alt={`char-${idx}`}
-                className="w-16 h-16 object-contain"
-              />
-            ) : (
-              <div key={idx} className="w-4" /> // small gap for space
-            )
-          )}
-        </div>
-      )}
-    </div>
-
-                {images.length > 0 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {images.map((img, index) => (
-                      <Card key={index} className="p-4">
-                        <img
-                          src={`data:image/png;base64,${img}`}
-                          alt={`Generated ${index}`}
-                          className="w-full h-auto rounded"
-                        />
-                      </Card>
-                    ))}
+                <div className="flex flex-col space-y-4 justify-center items-center">
+                  <Input
+                    placeholder="Enter text to generate..."
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                  />
+                  <Button
+                    onClick={handleGenerate}
+                    disabled={loading || !inputText}
+                    className="w-full"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      "Generate"
+                    )}
+                  </Button>
+                  <div className="relative mt-4 z-50 flex justify-center">
+                    <div className="flex gap-4 justify-center items-center">
+                      {imageDataList.length > 0 && (
+                        <div className="w-screen px-4 mt-4 flex flex-wrap justify-center z-50">
+                          {imageDataList.map((src, idx) =>
+                            src ? (
+                              <img
+                                key={idx}
+                                src={src}
+                                alt={`char-${idx}`}
+                                className="w-16 h-16 object-contain"
+                              />
+                            ) : (
+                              <div key={idx} className="w-8" /> // space character
+                            )
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
+                  <button
+                    onClick={downloadAllImages}
+                    className="mt-4 px-6 py-3 text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg shadow-lg transform transition-transform hover:scale-105 hover:from-indigo-600 hover:to-blue-500 active:scale-95 focus:outline-none disabled:bg-gray-400 disabled:cursor-not-allowed disabled:shadow-none disabled:scale-100"
+                    disabled={imageDataList.length === 0}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        className="w-5 h-5 animate-bounce"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 4v16m8-8l-8 8-8-8"
+                        />
+                      </svg>
+                      <span>Download Text</span>
+                    </div>
+                  </button>
+                </div>
               </div>
             )}
 
@@ -416,7 +470,7 @@ export default function Home() {
           </div>
         </div>
       )}
-      <footer className="w-full py-4 flex justify-center items-center text-gray-600 text-sm border-t mt-10">
+      <footer className="w-full py-4 flex flex-col justify-center items-center text-gray-600 text-sm border-t mt-10">
         <a
           href="https://github.com/saurabhkr132/handwriting-styles"
           target="_blank"
@@ -426,6 +480,18 @@ export default function Home() {
           <FaGithub className="w-5 h-5" />
           View Repository
         </a>
+        <span className="text-xs text-gray-400 mt-1">v0.1.1</span>
+        <div className="container mx-auto text-center mt-2">
+          <p className="text-sm">
+            This is a part of the AV490 - Computer Vision course project (IIST, Thiruvananthapuram).
+            <br />
+            Project members are:
+            <br />
+            <span className="font-semibold">Saurabh Kumar (SC22B146)</span>
+            <br />
+            <span className="font-semibold">Vansh Shah (SC22B034)</span>
+          </p>
+        </div>
       </footer>
     </div>
   );
