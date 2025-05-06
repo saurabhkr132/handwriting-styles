@@ -1,10 +1,12 @@
+"use client";
+
 import { useEffect, useState } from 'react';
 import { Trophy } from 'lucide-react';
 
 const trophyColors = ['text-yellow-400', 'text-gray-400', 'text-orange-500'];
 const bgHighlightColors = ['bg-yellow-100', 'bg-gray-300', 'bg-orange-100'];
 
-export default function LeaderboardComponent() {
+export default function Leaderboard() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

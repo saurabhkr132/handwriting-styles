@@ -15,7 +15,6 @@ export async function GET() {
 
     const drive = google.drive({ version: 'v3', auth: jwtClient });
 
-    // Step 1: Find "user-dataset" folder inside root
     const rootFolders = await drive.files.list({
       q: `'${PARENT_FOLDER_ID}' in parents and mimeType = 'application/vnd.google-apps.folder' and name = 'user-dataset' and trashed = false`,
       fields: 'files(id, name)',
@@ -29,7 +28,6 @@ export async function GET() {
 
     const userDatasetFolderId = rootFolders.data.files[0].id;
 
-    // Step 2: Get user folders
     const userFoldersData = await drive.files.list({
       q: `'${userDatasetFolderId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
       fields: 'files(id, name, mimeType)',
@@ -40,14 +38,12 @@ export async function GET() {
     for (const userFolder of userFoldersData.data.files || []) {
       let imageCount = 0;
 
-      // Step 3: Get character folders inside each user folder
       const charFoldersData = await drive.files.list({
         q: `'${userFolder.id}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
         fields: 'files(id, name, mimeType)',
       });
 
       for (const charFolder of charFoldersData.data.files || []) {
-        // Step 4: Count images inside each character folder
         const imageFiles = await drive.files.list({
           q: `'${charFolder.id}' in parents and mimeType contains 'image/' and trashed = false`,
           fields: 'files(id)',
@@ -60,7 +56,6 @@ export async function GET() {
       leaderboard.push({ user: userFolder.name, score: imageCount });
     }
 
-    // Sort by score
     leaderboard.sort((a, b) => b.score - a.score);
 
     return new Response(JSON.stringify({ leaderboard }), {
