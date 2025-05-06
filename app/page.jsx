@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import CanvasDraw from "@/components/CanvasDraw";
+import Leaderboard from "@/components/Leaderboard";
 import { Loader2 } from "lucide-react";
 import { auth } from "@/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -12,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import AuthForm from "@/components/AuthForm";
 import { HelpCircle } from "lucide-react";
+import { Trophy } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -230,6 +232,14 @@ export default function Home() {
           >
             Train Model
           </Button>
+          <div className="flex justify-end px-4 pt-2">
+            <button
+              onClick={() => setActiveTab("leaderboard")}
+              className="text-blue-500 hover:text-blue-700"
+            >
+              <Trophy className="w-6 h-6" />
+            </button>
+          </div>
           <div className="flex justify-end px-4 pt-2">
             <button
               onClick={() => setShowTrainHelp(true)}
@@ -467,6 +477,9 @@ export default function Home() {
                 </div>
               </div>
             )}
+            <div hidden={activeTab !== "leaderboard"}>
+              <Leaderboard />
+            </div>
           </div>
         </div>
       )}
@@ -480,10 +493,11 @@ export default function Home() {
           <FaGithub className="w-5 h-5" />
           View Repository
         </a>
-        <span className="text-xs text-gray-400 mt-1">v0.1.1</span>
+        <span className="text-xs text-gray-400 mt-1">v0.1.2</span>
         <div className="container mx-auto text-center mt-2">
           <p className="text-sm">
-            This is a part of the AV490 - Computer Vision course project (IIST, Thiruvananthapuram).
+            This is a part of the AV490 - Computer Vision course project (IIST,
+            Thiruvananthapuram).
             <br />
             Project members are:
             <br />
