@@ -257,7 +257,7 @@ export default function Home() {
                   <DialogTitle>How to Contribute</DialogTitle>
                 </div>
               </DialogHeader>
-              <ul className="pl-4 space-y-3 text-[15px] text-gray-800 leading-relaxed">
+              <ul className="pl-2 space-y-3 text-[15px] text-gray-800 leading-relaxed">
                 <li className="flex items-start gap-3 pl-1">
                   <FaRegHandPointRight className="mt-1 text-gray-700 text-4xl" />
                   <span>
@@ -321,6 +321,12 @@ export default function Home() {
                   <p className="text-gray-600">
                     Enter text to generate realistic handwriting samples
                   </p>
+                </div>
+
+                <div className="text-sm text-yellow-600 bg-yellow-100 border border-yellow-300 rounded-lg p-3">
+                  ⚠️ Note: The handwriting generation may not work on the first
+                  few attempts as the API is running on a free Render
+                  deployment. Please try a few times if it fails initially.
                 </div>
 
                 <div className="flex flex-col space-y-4 justify-center items-center">
@@ -493,7 +499,7 @@ export default function Home() {
           <FaGithub className="w-5 h-5" />
           View Repository
         </a>
-        <span className="text-xs text-gray-400 mt-1">v0.1.2</span>
+        <span className="text-xs text-gray-400 mt-1">v0.1.3</span>
         <div className="container mx-auto text-center mt-2">
           <p className="text-sm">
             This is a part of the AV490 - Computer Vision course project (IIST,

@@ -43,6 +43,7 @@ export default function Leaderboard() {
   return (
     <div className="p-6 max-w-3xl mx-auto mt-2 bg-gradient-to-b from-white to-blue-50 rounded-xl shadow-lg">
       <h2 className="text-3xl font-bold text-center text-blue-800 mb-6">🏆 Leaderboard</h2>
+      <div className="text-gray-500 text-center pb-2">Here are the top contributors to the dataset</div>
 
       <div className="space-y-4">
         {leaderboard.map((entry, index) => {

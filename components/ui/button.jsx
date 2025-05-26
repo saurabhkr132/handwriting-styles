@@ -9,7 +9,7 @@ const Button = React.forwardRef(
     
     const variants = {
       default: 'bg-blue-600 text-white hover:bg-blue-700',
-      outline: 'border border-gray-300 text-gray-400 bg-white hover:bg-gray-100',
+      outline: 'border border-gray-300 text-gray-600 bg-white hover:bg-gray-100',
       secondary: 'bg-gray-100 text-gray-800 hover:bg-gray-200',
     }
     
